@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>mainpage</title>
+  </head>
+  <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cosmo/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-h21C2fcDk/eFsW9sC9h0dhokq5pDinLNklTKoxIZRUn3+hvmgQSffLLQ4G4l2eEr"
+    crossorigin="anonymous">
+  <script src="http://code.jquery.com/jquery-2.2.3.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    .mainframe{
+      width : 600px;
+      height : 550px;
+      margin : auto;
+    }
+    .personalframe{
+      width : 600px;
+      height : 150px;
+    }
+    .centerframe{
+      width : 600px;
+      height : 400px;
+      /*background-color: yellow;*/
+
+    }
+    .leftframe{
+      width : 150px;
+      height : 400px;
+      float:left;
+      overflow:auto;
+    }
+    .rightframe{
+      width : 450px;
+      height : 400px;
+      float:left;
+      border : 1px solid lightgray;
+    }
+    .right-inuptwo-frame{
+      width : 450px;
+      height : 35px;
+      background-color : blue;
+      text-align: center;
+      display: none;
+    }
+
+    /*.right-inup-frame{
+      width :450px;
+      height : 325px;
+      display: none;
+    }*/
+    .right-inup-frame-in{
+      width :450px;
+      height : 325px;
+      overflow:auto;
+      display: none;
+    }
+    .right-indown-frame{
+      width :450px;
+      display: none;
+    }
+    .list-group-item{
+      cursor:pointer;
+    }
+
+  </style>
+  <script>
+    var roommembers = [];
+    //var clicked = [];
+    var clicked = [];
+    function clickitem(liobj){
+      roommembers = [];
+      var roomnum = $(liobj).children('input').eq(0).val();
+      var lastreadnum = $(liobj).children('input').eq(1).val();
+      var roomname = $(liobj).children('input').eq(2).val();
+
+      for (var i = 0; i < clicked.length; i++) {
+        if(clicked[i]==roomnum){
+          $('.right-inup-frame-in').hide();
+          $('#right-inup-frame-in'+roomnum).show();
+          $('.right-inuptwo-frame').show();
+          $('.right-indown-frame').show();
+          return;
+        }
+      }
+      clicked.push(roomnum);
+
+      $('.right-inup-frame-in').hide();
+      $('#right-inup-frame-in'+roomnum).show();
+      $('.right-inuptwo-frame').show();
+      $('.right-indown-frame').show();
+
+      $('#right-inuptwo-frame').text(roomname);
+      $("#currentroomnum").val(roomnum);
+      $.ajax({
+        url : '/getroommembers',
+        type : 'post',
+        dataType : 'text',
+        data : {roomnum : roomnum},
+        success : function(data){
+          var obj = JSON.parse(data);
+          for (var i = 0; i < obj.length; i++) {
+            roommembers.push(obj[i]);
+          }
+        }
+      });
+
+      $.ajax({
+        url : '/getpostlist',
+        type : 'post',
+        dataType : 'text',
+        data : {roomnum : roomnum, lastreadnum : 20160000000000 },
+        success : function(data){
+          var jdata = JSON.parse(data);
+          var str ="";
+          for(var i = 0; i < jdata.length; i++){
+            str +="<div style='word-break:break-all;'>";
+            str +=jdata[i].writer + " : " + jdata[i].content + jdata[i].regdate;
+            str += "</div>";
+          }
+          $('#right-inup-frame-in'+roomnum).html(str);
+          $('#right-inup-frame-in'+roomnum).scrollTop($('#right-inup-frame-in'+roomnum).prop('scrollHeight'));
+        }
+      })
+    };
+
+    function createroom(){
+      selectedwidth = 350;
+      selectedheight = 330;
+      selectedleft = (screen.width - selectedwidth)/2;
+      selectedtop = (screen.height - selectedheight)/2;
+      window.open('/createroom','window_name='+'방만들기',
+          'width='+selectedwidth+
+          ',height='+selectedheight+
+          ', left='+selectedleft+
+          ', top='+selectedtop+
+          ',location=no,status=no,scrollbars=yes');
+    }
+
+    function mouseoveraction(obj){
+      $(obj).css('background-color', 'gray');
+    }
+    function mouseoutaction(obj){
+      $(obj).css('background-color', 'white');
+    }
+    function enterevent(){
+      if(event.keyCode==13){
+        $('#send').click();
+      }
+    }
+
+    //소켓통신---------------------------------
+    var socket = io();
+    var init = function(){
+      socket.emit('init', '<%=login%>');
+    };
+    init();
+    function sendmsg(){
+      socket.emit('take action',
+                {chattext : $('#chattext').val(),
+                roommembers : roommembers,
+                login : '<%=login%>',
+                roomnum : $("#currentroomnum").val()});
+      $('#chattext').val("");
+    }
+    socket.on('take msg', function(msg){
+      //$('#right-inup-frame-in').append("<div style='word-break:break-all;'>"+msg+"</div>");
+      $('#right-inup-frame-in'+msg.roomnum).append("<div style='word-break:break-all;'>"+msg.msg+"</div>");
+      $('#right-inup-frame-in'+msg.roomnum).scrollTop($('#right-inup-frame-in'+msg.roomnum).prop('scrollHeight'));
+
+    });
+  </script>
+  <body>
+    <input type="hidden" id="currentroomnum" value="">
+    <div class="mainframe">
+      <div class="personalframe alert alert-dismissible alert-warning">
+        <h2><%=login%><h2>
+      </div>
+      <div class="centerframe">
+        <div class="leftframe">
+          <ul class="list-group">
+            <li class="list-group-item" onclick="createroom()"
+                  onmouseover="mouseoveraction(this)"
+                  onmouseout="mouseoutaction(this)">
+              방만들기
+            </li>
+          <% for(var i = 0; i < rooms.length; i++){%>
+            <li class="list-group-item" onclick="clickitem(this)"
+                  onmouseover="mouseoveraction(this)"
+                  onmouseout="mouseoutaction(this)">
+              <!-- <span class="badge">14</span> -->
+              <%=rooms[i].roomname%>
+              <input type="hidden" value="<%= rooms[i].roomnum%>">
+              <input type="hidden" value="<%= rooms[i].lastreadnum%>">
+              <input type="hidden" value="<%= rooms[i].roomname%>">
+            </li>
+          <% } %>
+          </ul>
+        </div>
+
+        <div class="rightframe panel panel-warning" id="rightframe">
+          <div class="right-inuptwo-frame panel-heading" id="right-inuptwo-frame">
+
+          </div>
+          <div class="right-inup-frame" id="right-inup-frame">
+            <% for(var i=0; i < rooms.length; i++){ %>
+              <div class="right-inup-frame-in" id="right-inup-frame-in<%=rooms[i].roomnum%>">
+
+              </div>
+            <% } %>
+
+          </div>
+          <div class="right-indown-frame" id="right-indown-frame">
+            <div class="input-group">
+              <input class="form-control" type="text" id="chattext"  onkeyup="enterevent()">
+              <span class="input-group-btn">
+                <button class="btn btn-default" id="send" type="button" onclick="sendmsg()">전송</button>
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </body>
+</html>

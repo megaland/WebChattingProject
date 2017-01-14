@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>insertmembers</title>
+  </head>
+  <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cosmo/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-h21C2fcDk/eFsW9sC9h0dhokq5pDinLNklTKoxIZRUn3+hvmgQSffLLQ4G4l2eEr"
+    crossorigin="anonymous">
+  <script src="http://code.jquery.com/jquery-2.2.3.min.js"></script>
+  <style>
+    form{
+      margin:auto;
+      width: 400px;
+    }
+  </style>
+  <script>
+    function checkid(obj){
+      $.ajax({
+        url : '/checkid',
+        type : 'post',
+        dataType : 'text',
+        data :  {id : obj.value},
+        success : function(data){
+          if(data == 'success'){
+            alert('사용할수있는아이디입니다.');
+          }else {
+            alert('사용할수없는아읻입니다.');
+          }
+        }
+      });
+    }
+
+    function checkpassword(){
+      if(!($('#inputpwd').val() == $('#inputpwdcheck').val())){
+        $('#inputpwdcheck').val('');
+        $('#inputpwdcheck').focus();
+      }
+    }
+
+  </script>
+  <body>
+    <form class="form-horizontal" action="/insertmember" method="post">
+      <div class="form-group">
+        <label class="col-lg-2 control-label" for="inputid">NICKNAME</label>
+        <div class="col-lg-10">
+          <input class="form-control" id="inputid" name="nickname" type="text" placeholder="NICKNAME" onchange="checkid(this)">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-lg-2 control-label" for="inputid">ID</label>
+        <div class="col-lg-10">
+          <input class="form-control" id="inputid" name="id" type="text" placeholder="ID">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-lg-2 control-label" for="inputpwd">PASSWORD</label>
+        <div class="col-lg-10">
+          <input type="password" class="form-control" name="passwordone" id="inputpwd" type="text" placeholder="PASSWORD">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-lg-2 control-label" for="inputpwdcheck">PASSWORD CHECK</label>
+        <div class="col-lg-10">
+          <input type="password" class="form-control" id="inputpwdcheck" name="passwordtwo" type="text" placeholder="PASSWORD" onchange="checkpassword()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-lg-2 control-label" for="inputemail">Email</label>
+        <div class="col-lg-10">
+          <input class="form-control" id="inputemail" name="email" type="text" placeholder="email@email.com">
+        </div>
+      </div>
+      <div align="center">
+        <button class="btn btn-primary" type="submit">등록</button>
+        <button class="btn btn-default" type="reset">리셋</button>
+      </div>
+    </form>
+  </body>
+</html>

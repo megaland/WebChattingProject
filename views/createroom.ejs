@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>newroom</title>
+  </head>
+  <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cosmo/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-h21C2fcDk/eFsW9sC9h0dhokq5pDinLNklTKoxIZRUn3+hvmgQSffLLQ4G4l2eEr"
+    crossorigin="anonymous">
+  <script src="http://code.jquery.com/jquery-2.2.3.min.js"></script>
+  <script>
+    function openerreload(){
+      var checkedid = ['<%=login%>'];
+      var obj = $('input:checked');
+      for (var i = 0; i < obj.length; i++) {
+        if(checkedid[0] == obj.eq(i).val()){
+
+        }else {
+          checkedid.push(obj.eq(i).val());
+        }
+
+      }
+      $.ajax({
+        url : '/createroom',
+        type : 'post',
+        dataType : 'text',
+        data : {checkedid : JSON.stringify(checkedid), roomname : $('#roomname').val()},
+        success : function(data){
+          alert(data);
+          self.close();
+          window.opener.location.reload();
+        }
+      });
+
+
+    }
+    function search(){
+      $('#list').html('');
+
+      $.ajax({
+        url : '/searchsomeone',
+        type : 'post',
+        dataType : 'text',
+        data : {searchword : $('#searchword').val()},
+        success : function(data){
+          var dataobj = JSON.parse(data);
+          var str = "";
+          for (var i = 0; i < dataobj.length; i++) {
+            str += "<div><input type='checkbox' id='ids' value='"+dataobj[i].id+"'>"+dataobj[i].id+"</div>";
+          }
+          $('#list').html(str);
+        }
+      });
+
+    }
+
+  </script>
+  <body>
+    <table>
+      <tr>
+        <td>방이름</td><td><input type="text" id="roomname"></td>
+      </tr>
+      <tr>
+        <td>참가자검색</td><td><input type="text" id="searchword"><input type="button" value="검색" onclick="search()"><br></td>
+      </tr>
+    </table>
+      <input type="button" onclick="openerreload()" value="확인">
+      <div id="list" style="overflow:auto;">
+
+      </div>
+  </body>
+</html>
